@@ -30,14 +30,23 @@
  * @desc The formula that calculates how many hits are possible
  * @default a.agi / 16
  * 
+ * @param Possible Magic Hits Formula
+ * @type text
+ * @desc The formula that calculates how many magic hits are possible
+ * @default a.mat / 32
+ * 
  * @param Damage Formula
  * @type text
  * @desc The default damage formula
  * @default a.atk * 4 - b.def * 2
  * 
  * @param Magic Damage Formula
- * @desc The default damage formula for spells
+ * @desc The default damage formula for spells (Base argument is used for a number base damage)
  * @default base + a.mat * 2 - b.mdf * 2
+ * 
+ * @param Healing Magic Formula
+ * @desc The default formula for healing magics
+ * @default base + a.mdf * getRandomInt(0,3)
  * 
  * @param Actual Hits Variable
  * @desc The ingame variable to store your hits scored (to use in messages)
@@ -60,6 +69,8 @@
  * 
  * Function for Magical Attacks
  * this.magicalAttack(a,b,base) where base is a default number value
+ * Note: You must use base in the formula if you want a base number value for your spells, otherwise;
+ * use this.magicalAttack(a,b,0)
  * 
  * Function for Healing Magic
  * this.healingMagic(a,b,base) where base is a default number value
@@ -81,8 +92,10 @@ function getRandomInt (min,max) { //Define a function to get a random range of n
     var doublehitsstate = toNumber(parameters['Double Hits State'], 10);
     var halfhitsstate = toNumber(parameters['Half Hits State'], 11);
     var phitsform = parameters['Possible Hits Formula'] || "a.agi / 16";
+    var mhitsform = parameters['Possible Magic Hits Formula'] || "m.mat / 32";
     var damageform = parameters['Damage Formula'] || "a.atk * 4 - b.def * 2";
     var magicdamform = parameters['Magic Damage Formula'] || "base + a.mat * 2 - b.mdf * 2";
+    var healingmagform = parameters['Healing Magic Formula'] || "base + a.mdf * getRandomInt(0,3)";
     var actualhitsvar = toNumber(parameters['Actual Hits Variable'], 1);
     var phits = 0;
     var damage = 0;
@@ -94,6 +107,7 @@ function getRandomInt (min,max) { //Define a function to get a random range of n
         $gameVariables.setValue(actualhitsvar, 0);
         phits = Math.floor(eval(phitsform));
         if(phits < 1) { phits = 1; }
+        if(phits > mhitsposs) { phits = mhitsposs; }
         if(a.isStateAffected(doublehitsstate)) { phits = phits * 2; }
         if(a.isStateAffected(halfhitsstate)) { phits = phits / 2; } 
         for(i=0; i < phits; i++){
@@ -109,10 +123,38 @@ function getRandomInt (min,max) { //Define a function to get a random range of n
     }
 
     Game_Action.prototype.magicalAttack = function(a,b,base){
-
+        damage = 0;
+        $gameVariables.setValue(actualhitsvar, 0);
+        var phits = Math.floor(eval(mhitsform));
+        if(phits < 1) { phits = 1; }
+        if(phits > mmagicposs) { phits = mmagicposs; }
+        for(i=0; i < phits; i++){
+            if(getRandomInt(0, 100) > 100 - (a.hit * 100) && getRandomInt(0, 100) > (b.eva * 100)){
+                damage = damage + eval(magicdamform);
+                $gameVariables.setValue(actualhitsvar, $gameVariables.value(actualhitsvar) + 1);
+            }
+            if($gameVariables.value(actualhitsvar) < 1){
+                $gameVariables.setValue(actualhitsvar, 0);
+            }
+        }
+        return damage;
     }
 
     Game_Action.prototype.healingMagic = function(a,b,base){
-
+        damage = 0;
+        $gameVariables.setValue(actualhitsvar, 0);
+        var phits = Math.floor(eval(mhitsform));
+        if(phits < 1) { phits = 1; }
+        if(phits > mmagicposs) { phits = mmagicposs; }
+        for(i=0; i < phits; i++){
+            if(getRandomInt(0, 100) > 100 - (a.hit * 100) && getRandomInt(0, 100) > (b.eva * 100)){
+                damage = damage + eval(healingmagform);
+                $gameVariables.setValue(actualhitsvar, $gameVariables.value(actualhitsvar) + 1);
+            }
+            if($gameVariables.value(actualhitsvar) < 1){
+                $gameVariables.setValue(actualhitsvar, 0);
+            }
+        }
+        return damage;
     }
 })
