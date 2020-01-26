@@ -65,22 +65,21 @@
  * in the skills you have set to attack, or your magic formulas to my functions.
  * 
  * Function for Physical Attacks
- * this.physicalAttack(a,b)
+ * this.physicalAttack(a,b);
  * 
  * Function for Magical Attacks
- * this.magicalAttack(a,b,base) where base is a default number value
+ * this.magicalAttack(a,b,base); where base is a default number value
  * Note: You must use base in the formula if you want a base number value for your spells, otherwise;
- * use this.magicalAttack(a,b,0)
+ * use this.magicalAttack(a,b,0);
  * 
  * Function for Healing Magic
- * this.healingMagic(a,b,base) where base is a default number value
+ * this.healingMagic(a,b,base); where base is a default number value
 */
-
-function getRandomInt (min,max) { //Define a function to get a random range of numbers
-    min = Math.ceil(min);
-    max = Math.floor(max) + 1;
-    return Math.floor(Math.random() * (max - min)) + min;
-}
+    function getRandomInt (min,max) { //Define a function to get a random range of numbers
+        min = Math.ceil(min);
+        max = Math.floor(max) + 1;
+        return Math.floor(Math.random() * (max - min)) + min;
+    }   
 
     function toNumber(str, def) {
         return isNaN(str) ? def : +(str || def);
@@ -100,8 +99,6 @@ function getRandomInt (min,max) { //Define a function to get a random range of n
     var phits = 0;
     var damage = 0;
 
-    (function (RFGMultipleHitsSystem) {
-
     Game_Action.prototype.physicalAttack = function(a,b){
         damage = 0;
         $gameVariables.setValue(actualhitsvar, 0);
@@ -117,6 +114,7 @@ function getRandomInt (min,max) { //Define a function to get a random range of n
             }
             if($gameVariables.value(actualhitsvar) < 1){ //If there were 0 sucessful hits, set to 1. Let game engine handle misses and evasions
                 $gameVariables.setValue(actualhitsvar, 1);
+                damage = eval(damageform);
             }
         }
         return damage;
@@ -134,7 +132,8 @@ function getRandomInt (min,max) { //Define a function to get a random range of n
                 $gameVariables.setValue(actualhitsvar, $gameVariables.value(actualhitsvar) + 1);
             }
             if($gameVariables.value(actualhitsvar) < 1){
-                $gameVariables.setValue(actualhitsvar, 0);
+                $gameVariables.setValue(actualhitsvar, 1);
+                damage = eval(magicdamform);
             }
         }
         return damage;
@@ -152,9 +151,9 @@ function getRandomInt (min,max) { //Define a function to get a random range of n
                 $gameVariables.setValue(actualhitsvar, $gameVariables.value(actualhitsvar) + 1);
             }
             if($gameVariables.value(actualhitsvar) < 1){
-                $gameVariables.setValue(actualhitsvar, 0);
+                $gameVariables.setValue(actualhitsvar, 1);
+                damage = eval(healingmagform);
             }
         }
         return damage;
     }
-})
