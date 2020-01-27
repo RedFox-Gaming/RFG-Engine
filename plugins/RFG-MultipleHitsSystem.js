@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// RFG-Multiple Hits System
+// RFG-Multiple Hits System v0.2
 // Author: RedFoxGaming
 /////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@
  * 
  * @param Healing Magic Formula
  * @desc The default formula for healing magics
- * @default base + a.mdf * getRandomInt(0,3)
+ * @default base + a.mdf
  * 
  * @param Actual Hits Variable
  * @desc The ingame variable to store your hits scored (to use in messages)
@@ -56,7 +56,7 @@
  * 
  * ----------------------------------------------
  * RFG Multiple Hits System
- * Version 0.1
+ * Version 0.2
  * ----------------------------------------------
  * 
  * The purpose of this plugin is to mimic the way Final Fantasy handles their
@@ -81,40 +81,40 @@
         return Math.floor(Math.random() * (max - min)) + min;
     }   
 
-    function toNumber(str, def) {
+    function toNumber(str, def) { //Define a function to assign parameters to a number value
         return isNaN(str) ? def : +(str || def);
     }
 
-    var parameters = PluginManager.parameters("RFG-MultipleHitsSystem");
-    var mhitsposs = toNumber(parameters['Maximum Possible Hits'], 16);
-    var mmagicposs = toNumber(parameters['Maximum Magic Hits'], 6);
-    var doublehitsstate = toNumber(parameters['Double Hits State'], 10);
-    var halfhitsstate = toNumber(parameters['Half Hits State'], 11);
-    var phitsform = parameters['Possible Hits Formula'] || "a.agi / 16";
-    var mhitsform = parameters['Possible Magic Hits Formula'] || "m.mat / 32";
-    var damageform = parameters['Damage Formula'] || "a.atk * 4 - b.def * 2";
-    var magicdamform = parameters['Magic Damage Formula'] || "base + a.mat * 2 - b.mdf * 2";
-    var healingmagform = parameters['Healing Magic Formula'] || "base + a.mdf * getRandomInt(0,3)";
-    var actualhitsvar = toNumber(parameters['Actual Hits Variable'], 1);
-    var phits = 0;
-    var damage = 0;
+    var parameters = PluginManager.parameters("RFG-MultipleHitsSystem"); //Load all parameters into an array
+    var mhitsposs = toNumber(parameters['Maximum Possible Hits'], 16); //Set variable for Max Possible Hits
+    var mmagicposs = toNumber(parameters['Maximum Magic Hits'], 6); //Set a variable for Max Magic Multiplier
+    var doublehitsstate = toNumber(parameters['Double Hits State'], 10); //Set a variable for a state that doubles hits
+    var halfhitsstate = toNumber(parameters['Half Hits State'], 11); //Set a variable for a state that halves hits
+    var phitsform = parameters['Possible Hits Formula'] || "a.agi / 16"; //Set a variable for a formula that defines possible hits
+    var mhitsform = parameters['Possible Magic Hits Formula'] || "m.mat / 32"; //Set a variable to define same thing for magic hits
+    var damageform = parameters['Damage Formula'] || "a.atk * 4 - b.def * 2"; //Set your default damage formula
+    var magicdamform = parameters['Magic Damage Formula'] || "base + a.mat * 2 - b.mdf * 2"; //Set your default magic damage formula
+    var healingmagform = parameters['Healing Magic Formula'] || "base + a.mdf"; //Set your default healing formula
+    var actualhitsvar = toNumber(parameters['Actual Hits Variable'], 1); //Set the ingame variable to track hits landed
+    var phits = 0; //Init phits variable
+    var damage = 0; //Init damage variable
 
-    Game_Action.prototype.physicalAttack = function(a,b){
-        damage = 0;
-        $gameVariables.setValue(actualhitsvar, 0);
-        phits = Math.floor(eval(phitsform));
-        if(phits < 1) { phits = 1; }
-        if(phits > mhitsposs) { phits = mhitsposs; }
-        if(a.isStateAffected(doublehitsstate)) { phits = phits * 2; }
-        if(a.isStateAffected(halfhitsstate)) { phits = phits / 2; } 
-        for(i=0; i < phits; i++){
+    Game_Action.prototype.physicalAttack = function(a,b){ //Physical attack function
+        damage = 0; //Set damage to 0
+        $gameVariables.setValue(actualhitsvar, 0); //Set hits landed to 0
+        phits = Math.floor(eval(phitsform)); //Evaluate phits formula
+        if(phits < 1) { phits = 1; } //If less than 1, make it 1
+        if(phits > mhitsposs) { phits = mhitsposs; } //If higher than the max possible hits, set to max possible hits
+        if(a.isStateAffected(doublehitsstate)) { phits = phits * 2; } //If double state inflicted, double hits
+        if(a.isStateAffected(halfhitsstate)) { phits = phits / 2; } //If half state inflicted, half hits
+        for(i=0; i < phits; i++){ //Main damage calculation for loop
             if(getRandomInt(0, 100) > 100 - (a.hit * 100) && getRandomInt(0, 100) > (b.eva * 100)) { //If both of these conditions are true, than this was a successful hit
-                damage = damage + eval(damageform);
+                damage = damage + eval(damageform); //Add damage to damage pool
                 $gameVariables.setValue(actualhitsvar, $gameVariables.value(actualhitsvar) + 1); //Add one to actual hits if sucessful
             }
             if($gameVariables.value(actualhitsvar) < 1){ //If there were 0 sucessful hits, set to 1. Let game engine handle misses and evasions
                 $gameVariables.setValue(actualhitsvar, 1);
-                damage = eval(damageform);
+                damage = eval(damageform); //Do damage, even if the plugin scored 0 hits
             }
         }
         return damage;
